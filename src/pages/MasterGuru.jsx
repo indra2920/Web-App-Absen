@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Download, Plus, Trash2 } from 'lucide-react';
-import { getData, addData, deleteData, generateId } from '../db';
+import { addData, deleteData, generateId, subscribeData } from '../db';
 
 function MasterGuru() {
   const [gurus, setGurus] = useState([]);
   const [formData, setFormData] = useState({ nama: '', nip: '', mapel: '' });
 
   useEffect(() => {
-    loadData();
+    const unsub = subscribeData('guru', (data) => {
+      setGurus(data);
+    });
+    return () => unsub();
   }, []);
-
-  const loadData = async () => {
-    const data = await getData('guru');
-    setGurus(data);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,13 +26,11 @@ function MasterGuru() {
     
     await addData('guru', newGuru);
     setFormData({ nama: '', nip: '', mapel: '' });
-    loadData();
   };
 
   const handleDelete = async (id) => {
     if (confirm('Yakin ingin menghapus data ini?')) {
       await deleteData('guru', id);
-      loadData();
     }
   };
 

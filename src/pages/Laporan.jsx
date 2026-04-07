@@ -1,30 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Filter } from 'lucide-react';
-import { getData } from '../db';
+import { subscribeData } from '../db';
 import { format } from 'date-fns';
 
 function Laporan() {
   const [logs, setLogs] = useState([]);
   const [filterDate, setFilterDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
+  const [allLogs, setAllLogs] = useState([]);
+
   useEffect(() => {
-    loadData();
-  }, [filterDate]);
+    const unsub = subscribeData('logAbsen', (rawLogs) => {
+      rawLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      setAllLogs(rawLogs);
+    });
+    return () => unsub();
+  }, []);
 
-  const loadData = async () => {
-    const rawLogs = await getData('logAbsen');
-    
-    // Sort descending by time
-    rawLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    // Filter by date
-    const filtered = rawLogs.filter(l => {
+  useEffect(() => {
+    const filtered = allLogs.filter(l => {
       const logDate = format(new Date(l.timestamp), 'yyyy-MM-dd');
       return logDate === filterDate;
     });
-
     setLogs(filtered);
-  };
+  }, [allLogs, filterDate]);
 
   const exportCSV = () => {
     if (logs.length === 0) return;

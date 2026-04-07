@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Download, Plus, Trash2 } from 'lucide-react';
-import { getData, addData, deleteData, generateId } from '../db';
+import { addData, deleteData, generateId, subscribeData } from '../db';
 
 function MasterMurid() {
   const [murid, setMurid] = useState([]);
   const [formData, setFormData] = useState({ nama: '', nis: '', kelas: '' });
 
   useEffect(() => {
-    loadData();
+    const unsub = subscribeData('murid', (data) => {
+      setMurid(data);
+    });
+    return () => unsub();
   }, []);
-
-  const loadData = async () => {
-    const data = await getData('murid');
-    setMurid(data);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,13 +26,11 @@ function MasterMurid() {
     
     await addData('murid', newMurid);
     setFormData({ nama: '', nis: '', kelas: '' });
-    loadData();
   };
 
   const handleDelete = async (id) => {
     if (confirm('Yakin ingin menghapus data ini?')) {
       await deleteData('murid', id);
-      loadData();
     }
   };
 

@@ -6,7 +6,8 @@ import {
   setDoc, 
   doc, 
   deleteDoc, 
-  updateDoc 
+  updateDoc,
+  onSnapshot
 } from "firebase/firestore";
 
 // Your web app's Firebase configuration
@@ -35,13 +36,22 @@ export const getData = async (collectionName) => {
     const data = [];
     querySnapshot.forEach((doc) => {
       data.push({ ...doc.data() });
-      // Note: doc.data() already contains the 'id' field because we explicitly set it below.
     });
     return data;
   } catch (error) {
     console.error("Error fetching data: ", error);
     return [];
   }
+};
+
+export const subscribeData = (collectionName, callback) => {
+  return onSnapshot(collection(firestoreDb, collectionName), (querySnapshot) => {
+    const data = [];
+    querySnapshot.forEach((doc) => {
+      data.push({ ...doc.data() });
+    });
+    callback(data);
+  });
 };
 
 export const addData = async (collectionName, item) => {

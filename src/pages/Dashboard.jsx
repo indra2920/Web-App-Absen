@@ -1,26 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { Users, UserSquare2, ScanLine } from 'lucide-react';
-import { getData } from '../db';
+import { subscribeData } from '../db';
 
 function Dashboard() {
   const [stats, setStats] = useState({ guru: 0, murid: 0, absenHariIni: 0 });
 
   useEffect(() => {
-    const loadStats = async () => {
-      const g = await getData('guru');
-      const m = await getData('murid');
-      const log = await getData('logAbsen');
-      
+    const unsubGuru = subscribeData('guru', (g) => {
+      setStats(prev => ({ ...prev, guru: g.length }));
+    });
+    
+    const unsubMurid = subscribeData('murid', (m) => {
+      setStats(prev => ({ ...prev, murid: m.length }));
+    });
+    
+    const unsubLog = subscribeData('logAbsen', (log) => {
       const today = new Date().toLocaleDateString('id-ID');
       const todayLog = log.filter(l => new Date(l.timestamp).toLocaleDateString('id-ID') === today);
+      setStats(prev => ({ ...prev, absenHariIni: todayLog.length }));
+    });
 
-      setStats({
-        guru: g.length,
-        murid: m.length,
-        absenHariIni: todayLog.length
-      });
+    return () => {
+      unsubGuru();
+      unsubMurid();
+      unsubLog();
     };
-    loadStats();
   }, []);
 
   return (
